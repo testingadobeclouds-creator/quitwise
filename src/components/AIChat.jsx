@@ -55,16 +55,28 @@ export default function AIChat({ fullPage = false }) {
       })
     } catch (err) {
       console.error('Gemini error:', err)
+      const errStr = String(err?.message || err)
+      const isRateLimit = errStr.includes('429') || errStr.includes('quota') || errStr.includes('RESOURCE_EXHAUSTED')
+
       if (err.message === 'GEMINI_KEY_MISSING') {
         setMessages(m => {
           const copy = [...m]
           copy[copy.length - 1] = {
             role: 'model',
-            text: '⚠️ AI chat requires a Gemini API key. Please verify `VITE_GEMINI_API_KEY` in your `.env` file.',
+            text: '⚠️ AI chat requires a Gemini API key. Please verify `VITE_GEMINI_API_KEY` in your settings.',
           }
           return copy
         })
         setApiError(true)
+      } else if (isRateLimit) {
+        setMessages(m => {
+          const copy = [...m]
+          copy[copy.length - 1] = {
+            role: 'model',
+            text: "🌿 **I'm taking a quick breather!** The AI counselor received too many requests this minute. Take a slow, deep breath with me, wait about 30–60 seconds, and message me again. Remember: one breath at a time, you're doing great!",
+          }
+          return copy
+        })
       } else {
         setMessages(m => {
           const copy = [...m]
@@ -78,6 +90,7 @@ export default function AIChat({ fullPage = false }) {
     } finally {
       setSending(false)
     }
+
   }
 
 
